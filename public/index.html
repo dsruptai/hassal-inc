@@ -467,46 +467,19 @@ async function go() {
 
   const today = new Date().toISOString().split('T')[0];
 
-  const system = `You are a South African financial intelligence analyst specializing in M&A deals, liquidity events, and corporate transactions in South Africa.
-
-Use web search to find the most recent South African business sales, acquisitions, mergers, JSE delistings, IPOs, private equity buyouts, BEE transactions, disposals, unbundlings, business rescue proceedings, Competition Commission merger approvals, and other liquidity events involving South African companies or assets.
-
-Key sources to search: JSE SENS announcements, Competition Commission SA merger decisions, DealMakers SA, Moneyweb, BizNews, Fin24/News24, BusinessLIVE, IOL Business Report, Engineering News.
-
-Only include deals where at least one party is a South African company, the target operates in South Africa, or the deal involves South African assets.
-
-Return ONLY raw JSON — no markdown fences, no preamble, no explanation. Structure:
-{
-  "summary": "2-3 sentence commentary on current South African M&A and deal activity trends",
-  "stats": {
-    "totalDeals": <number>,
-    "estimatedTotalValue": "<formatted e.g. R12.5B or $800M>",
-    "largestDeal": "<company or deal name>",
-    "hotSector": "<sector name>"
-  },
-  "events": [
-    {
-      "company": "<target company>",
-      "type": "<acquisition|merger|ipo|pe|buyout|bee|delisting|disposal|restructuring>",
-      "description": "<2-3 sentence summary with parties, deal value context, strategic rationale, and Competition Commission status if applicable>",
-      "dealValue": "<e.g. R1.2B or $50M or Undisclosed>",
-      "sector": "<sector>",
-      "acquirer": "<acquiring party or N/A>",
-      "date": "<e.g. Mar 2026>"
-    }
-  ]
-}
-Return 8–15 events, most recent first. Include JSE-listed company deals, Competition Commission merger approvals, South African private equity transactions, BEE deals, delistings, and cross-border deals involving SA companies. Today is ${today}.`;
+  const system = `SA M&A analyst. Use web search to find recent South African deals. Return ONLY raw JSON:
+{"summary":"1-2 sentences on SA deal trends","stats":{"totalDeals":0,"estimatedTotalValue":"R0","largestDeal":"","hotSector":""},"events":[{"company":"","type":"acquisition|merger|ipo|pe|buyout|bee|delisting|disposal|restructuring","description":"1-2 sentences","dealValue":"R0 or Undisclosed","sector":"","acquirer":"or N/A","date":"Mon YYYY"}]}
+Return 6-10 events. Only SA companies/assets. Today: ${today}.`;
 
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 5000,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 3000,
         system,
-        messages: [{ role: 'user', content: `Search for the most recent and significant South African ${typeStr} in the ${sector} sector from the last 90 days. Focus on deals involving JSE-listed companies, Competition Commission merger approvals, South African private equity transactions, BEE deals, delistings, and cross-border deals involving SA businesses. Return only raw JSON.` }],
+        messages: [{ role: 'user', content: `Find recent South African ${typeStr} in ${sector} from the last 60 days. Search JSE SENS, Competition Commission, DealMakers SA, Moneyweb, BizNews, Fin24. Return raw JSON only.` }],
         tools: [{ type: 'web_search_20250305', name: 'web_search' }]
       })
     });
