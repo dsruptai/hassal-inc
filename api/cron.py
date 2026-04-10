@@ -12,8 +12,8 @@ from datetime import datetime
 
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 RESEND_KEY = os.environ.get("RESEND_API_KEY", "").strip()
-NOTIFY_EMAIL = os.environ.get("NOTIFY_EMAIL", "marc@dsrupt.ai")
-FROM_EMAIL = "Hassal Inc <onboarding@resend.dev>"  # Resend free tier sender
+NOTIFY_EMAIL = "dalehas@gmail.com"
+FROM_EMAIL = "Hassal Inc <alerts@dsrupt.ai>"
 
 # Simple KV using Vercel KV or fallback to /tmp
 SEEN_FILE = "/tmp/hassal_seen_deals.json"
