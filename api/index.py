@@ -42,25 +42,21 @@ def _run_scrape():
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    try:
-        deals = get_deals(limit=50)
-        total = get_deal_count()
-        sources = get_sources_summary()
-        deal_types = get_deal_types_summary()
-        return templates.TemplateResponse(
-            name="dashboard.html",
-            context={
-                "request": request,
-                "deals": deals,
-                "total": total,
-                "sources": sources,
-                "deal_types": deal_types,
-                "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
-            },
-        )
-    except Exception as e:
-        import traceback
-        return JSONResponse({"error": str(e), "tb": traceback.format_exc()}, status_code=500)
+    deals = get_deals(limit=50)
+    total = get_deal_count()
+    sources = get_sources_summary()
+    deal_types = get_deal_types_summary()
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard.html",
+        context={
+            "deals": deals,
+            "total": total,
+            "sources": sources,
+            "deal_types": deal_types,
+            "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+        },
+    )
 
 
 @app.get("/api/deals")
@@ -102,6 +98,7 @@ async def cron_scrape():
 @app.get("/about", response_class=HTMLResponse)
 async def about(request: Request):
     return templates.TemplateResponse(
+        request=request,
         name="about.html",
-        context={"request": request},
+        context={},
     )
