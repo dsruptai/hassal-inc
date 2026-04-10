@@ -42,22 +42,21 @@ def _run_scrape():
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    try:
-        deals = get_deals(limit=50)
-        total = get_deal_count()
-        sources = get_sources_summary()
-        deal_types = get_deal_types_summary()
-        return templates.TemplateResponse("dashboard.html", {
+    deals = get_deals(limit=50)
+    total = get_deal_count()
+    sources = get_sources_summary()
+    deal_types = get_deal_types_summary()
+    return templates.TemplateResponse(
+        name="dashboard.html",
+        context={
             "request": request,
             "deals": deals,
             "total": total,
             "sources": sources,
             "deal_types": deal_types,
             "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
-        })
-    except Exception as e:
-        import traceback
-        return JSONResponse({"error": str(e), "traceback": traceback.format_exc()}, status_code=500)
+        },
+    )
 
 
 @app.get("/api/deals")
@@ -98,23 +97,7 @@ async def cron_scrape():
 
 @app.get("/about", response_class=HTMLResponse)
 async def about(request: Request):
-    return templates.TemplateResponse("about.html", {"request": request})
-
-
-@app.get("/api/debug")
-async def debug():
-    """Debug endpoint to inspect Vercel file structure."""
-    api_dir = os.path.dirname(os.path.abspath(__file__))
-    parent_dir = os.path.dirname(api_dir)
-    return {
-        "__file__": os.path.abspath(__file__),
-        "api_dir": api_dir,
-        "api_dir_contents": os.listdir(api_dir) if os.path.isdir(api_dir) else "NOT A DIR",
-        "parent_dir": parent_dir,
-        "parent_dir_contents": os.listdir(parent_dir) if os.path.isdir(parent_dir) else "NOT A DIR",
-        "template_dir": TEMPLATE_DIR,
-        "template_dir_exists": os.path.isdir(TEMPLATE_DIR),
-        "template_dir_contents": os.listdir(TEMPLATE_DIR) if os.path.isdir(TEMPLATE_DIR) else "NOT A DIR",
-        "cwd": os.getcwd(),
-        "cwd_contents": os.listdir(os.getcwd()),
-    }
+    return templates.TemplateResponse(
+        name="about.html",
+        context={"request": request},
+    )

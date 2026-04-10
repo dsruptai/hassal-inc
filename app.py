@@ -63,14 +63,17 @@ async def dashboard(request: Request):
     total = get_deal_count()
     sources = get_sources_summary()
     deal_types = get_deal_types_summary()
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request,
-        "deals": deals,
-        "total": total,
-        "sources": sources,
-        "deal_types": deal_types,
-        "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
-    })
+    return templates.TemplateResponse(
+        name="dashboard.html",
+        context={
+            "request": request,
+            "deals": deals,
+            "total": total,
+            "sources": sources,
+            "deal_types": deal_types,
+            "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+        },
+    )
 
 
 @app.get("/api/deals")
@@ -109,4 +112,4 @@ async def trigger_scrape():
 
 @app.get("/about", response_class=HTMLResponse)
 async def about(request: Request):
-    return templates.TemplateResponse("about.html", {"request": request})
+    return templates.TemplateResponse(name="about.html", context={"request": request})
