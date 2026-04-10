@@ -171,6 +171,46 @@ def send_email(new_deals):
     return resp.status in (200, 201)
 
 
+def send_email_debug(new_deals):
+    """Like send_email but returns (success, debug_info)."""
+    if not RESEND_KEY or not new_deals:
+        return False, {"reason": "no key or no deals"}
+
+    # Build same HTML as send_email
+    colors = {
+        "acquisition": "#10b981", "merger": "#3b82f6", "ipo": "#14b8a6",
+        "pe": "#f59e0b", "buyout": "#ec4899", "bee": "#a78bfa",
+        "delisting": "#f43f5e", "disposal": "#f59e0b", "restructuring": "#3b82f6",
+    }
+    deal_html = ""
+    for ev in new_deals:
+        t = (ev.get("type", "acquisition") or "acquisition").lower()
+        color = colors.get(t, "#6366f1")
+        deal_html += f'<div style="background:#181b25;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px 16px;margin-bottom:8px;border-left:3px solid {color};"><div style="margin-bottom:6px;"><span style="color:#f0f0f5;font-weight:700;font-size:14px;">{ev.get("company","")}</span> <span style="color:{color};font-size:10px;font-weight:700;text-transform:uppercase;">({t})</span></div><p style="margin:0;color:#8b8fa3;font-size:13px;line-height:1.5;">{ev.get("description","")}</p></div>'
+
+    html = f'<html><body style="margin:0;padding:0;background:#08090d;font-family:Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:20px;"><div style="background:#12141c;border-radius:10px;overflow:hidden;"><div style="background:linear-gradient(135deg,#6366f1,#a78bfa);padding:20px 24px;"><h1 style="margin:0;color:white;font-size:20px;">Hassal Inc — Test Alert</h1></div><div style="padding:20px 24px;">{deal_html}</div><div style="padding:16px 24px;text-align:center;"><a href="https://hassal-inc.vercel.app" style="display:inline-block;background:#6366f1;color:white;padding:10px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;">View Dashboard</a></div></div></div></body></html>'
+
+    payload = json.dumps({
+        "from": FROM_EMAIL,
+        "to": [NOTIFY_EMAIL],
+        "subject": "Hassal Inc — Test Alert (5 Sample Deals)",
+        "html": html,
+    }).encode("utf-8")
+
+    ctx = ssl.create_default_context()
+    conn = http.client.HTTPSConnection("api.resend.com", timeout=30, context=ctx)
+    conn.request("POST", "/emails", body=payload, headers={
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {RESEND_KEY}",
+        "User-Agent": "Mozilla/5.0 (compatible; HassalInc/1.0)",
+        "Accept": "application/json",
+    })
+    resp = conn.getresponse()
+    resp_body = resp.read().decode("utf-8")
+    conn.close()
+    return resp.status in (200, 201), {"status": resp.status, "body": resp_body}
+
+
 _last_email_error = None
 
 
@@ -193,15 +233,13 @@ class handler(BaseHTTPRequestHandler):
                     {"company": "Google / Wiz Inc", "type": "acquisition", "description": "Google acquires cloud security platform Wiz. Approved by SA Competition Commission without conditions.", "dealValue": "$32B", "sector": "Technology / Cloud Security", "acquirer": "Google LLC", "date": "Mar 2026"},
                 ]
                 email_error = None
+                email_debug = None
                 try:
-                    email_sent = send_email(sample)
-                except urllib.error.HTTPError as e:
-                    email_sent = False
-                    email_error = f"{e.code}: {e.read().decode('utf-8')}"
+                    email_sent, email_debug = send_email_debug(sample)
                 except Exception as e:
                     email_sent = False
                     email_error = str(e)
-                self._respond(200, {"ok": True, "test": True, "email_sent": email_sent, "sample_deals": len(sample), "email_error": email_error})
+                self._respond(200, {"ok": True, "test": True, "email_sent": email_sent, "sample_deals": len(sample), "email_error": email_error, "email_debug": email_debug})
                 return
 
             events = fetch_deals()
