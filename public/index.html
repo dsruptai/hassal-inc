@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hassal Inc — South African Deal Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b0e;
+    --surface: #0f1318;
+    --surface2: #151b22;
+    --border: #1c2330;
+    --border2: #243040;
+    --accent: #a8e63d;
+    --accent-dim: rgba(168,230,61,0.12);
+    --accent-border: rgba(168,230,61,0.25);
+    --teal: #34d9a0;
+    --teal-dim: rgba(52,217,160,0.12);
+    --gold: #f0c040;
+    --gold-dim: rgba(240,192,64,0.12);
+    --blue: #5b9cf6;
+    --pink: #f0608a;
+    --text: #dde4ec;
+    --text2: #7a8898;
+    --text3: #3f4f60;
+    --danger: #f06060;
+    --danger-bg: rgba(240,96,96,0.08);
+    --danger-border: rgba(240,96,96,0.2);
+    --r: 5px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    line-height: 1;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 200;
+    background: rgba(8,11,14,0.9);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 20px;
+    letter-spacing: -0.3px;
+  }
+  .brand-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: blink 2.5s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .ts-label { font-size: 11px; color: var(--text3); }
+  .ts-val { font-size: 11px; color: var(--teal); }
+
+  /* ── KEY BAR ── */
+  .key-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .key-bar.hidden { display: none; }
+  .key-label { font-size: 10px; color: var(--text2); letter-spacing: 1.4px; text-transform: uppercase; white-space: nowrap; }
+  .key-input {
+    flex: 1; min-width: 200px; max-width: 380px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: var(--r);
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .key-input:focus { border-color: var(--accent); }
+  .key-input::placeholder { color: var(--text3); }
+  .key-save {
+    background: transparent; border: 1px solid var(--accent); color: var(--accent);
+    padding: 7px 16px; border-radius: var(--r);
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    cursor: pointer; transition: background 0.15s; white-space: nowrap;
+  }
+  .key-save:hover { background: var(--accent-dim); }
+  .key-hint { font-size: 10px; color: var(--text3); }
+  .key-hint a { color: var(--teal); text-decoration: none; }
+  .key-hint a:hover { text-decoration: underline; }
+
+  .key-active { display: none; align-items: center; gap: 8px; }
+  .key-active.show { display: flex; }
+  .ka-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 5px var(--teal); }
+  .ka-text { font-size: 12px; color: var(--teal); }
+  .ka-change { font-size: 10px; color: var(--text2); cursor: pointer; text-decoration: underline; }
+  .ka-change:hover { color: var(--text); }
+
+  /* ── MAIN ── */
+  main { max-width: 1080px; margin: 0 auto; padding: 28px 32px 60px; }
+
+  /* ── CONTROLS ── */
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 20px; }
+  .ctrl-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+  .ctrl-label { font-size: 10px; color: var(--text2); letter-spacing: 1.4px; text-transform: uppercase; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    padding: 5px 12px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text2); border-radius: var(--r); font-size: 11px; font-family: 'DM Mono', monospace;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .chip:hover { border-color: var(--border2); color: var(--text); }
+  .chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  select {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 12px; border-radius: var(--r); font-size: 12px; font-family: 'DM Mono', monospace;
+    cursor: pointer; outline: none; transition: border-color 0.2s; height: 34px;
+    appearance: none; padding-right: 28px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8898'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+  }
+  select:focus { border-color: var(--accent); }
+  .fetch-btn {
+    background: var(--accent); color: #050a02; border: none;
+    padding: 0 22px; height: 34px; border-radius: var(--r);
+    font-size: 12px; font-family: 'DM Mono', monospace; font-weight: 500;
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s; white-space: nowrap; letter-spacing: 0.3px;
+  }
+  .fetch-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .fetch-btn:active { transform: translateY(0); }
+  .fetch-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── STATS ── */
+  .stats {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    border: 1px solid var(--border); border-radius: var(--r);
+    overflow: hidden; margin-bottom: 20px;
+  }
+  .stat { background: var(--surface); padding: 14px 16px; border-right: 1px solid var(--border); }
+  .stat:last-child { border-right: none; }
+  .stat-lbl { font-size: 9px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-val { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); }
+  .stat-val.g { color: var(--accent); }
+  .stat-val.a { color: var(--gold); }
+  .stat-val.t { color: var(--teal); }
+
+  /* ── SUMMARY ── */
+  .summary {
+    background: var(--accent-dim); border: 1px solid var(--accent-border);
+    border-radius: var(--r); padding: 16px 18px; margin-bottom: 18px;
+    font-size: 13px; color: var(--text2); line-height: 1.75;
+  }
+  .summary-hdr { font-size: 9px; color: var(--accent); letter-spacing: 1.8px; text-transform: uppercase; margin-bottom: 8px; }
+
+  /* ── ERROR ── */
+  .err-box {
+    background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger);
+    padding: 12px 16px; border-radius: var(--r); font-size: 12px; line-height: 1.6; margin-bottom: 16px;
+  }
+
+  /* ── LOADER ── */
+  .loader { display: flex; flex-direction: column; align-items: center; padding: 70px 0; gap: 16px; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-txt { font-size: 11px; color: var(--text2); letter-spacing: 0.8px; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+  /* ── FEED ── */
+  .feed-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .feed-lbl { font-size: 10px; color: var(--text2); letter-spacing: 2px; text-transform: uppercase; }
+  .feed-count { font-size: 11px; color: var(--teal); }
+  .cards { display: flex; flex-direction: column; gap: 2px; }
+
+  /* ── EVENT CARD ── */
+  .card {
+    display: grid; grid-template-columns: 3px 1fr auto;
+    gap: 14px; align-items: start;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 18px 20px;
+    transition: border-color 0.15s, background 0.15s;
+    animation: fadeUp 0.35s ease forwards; opacity: 0;
+    cursor: default;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:translateY(0)} }
+  .card:hover { border-color: var(--border2); background: var(--surface2); }
+  .card-bar { border-radius: 2px; min-height: 46px; }
+  .bar-acquisition { background: var(--accent); }
+  .bar-merger { background: var(--blue); }
+  .bar-ipo { background: var(--teal); }
+  .bar-pe { background: var(--gold); }
+  .bar-buyout { background: var(--pink); }
+  .bar-bee { background: var(--teal); }
+  .bar-delisting { background: var(--pink); }
+  .bar-disposal { background: var(--gold); }
+  .bar-restructuring { background: var(--blue); }
+
+  .card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .co-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); }
+  .ev-tag {
+    font-size: 9px; padding: 2px 7px; border-radius: 3px;
+    letter-spacing: 1px; text-transform: uppercase; font-weight: 500;
+  }
+  .tag-acquisition { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); }
+  .tag-merger { background: rgba(91,156,246,0.1); color: var(--blue); border: 1px solid rgba(91,156,246,0.25); }
+  .tag-ipo { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(52,217,160,0.25); }
+  .tag-pe { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(240,192,64,0.25); }
+  .tag-buyout { background: rgba(240,96,138,0.1); color: var(--pink); border: 1px solid rgba(240,96,138,0.25); }
+  .tag-bee { background: rgba(52,217,160,0.1); color: var(--teal); border: 1px solid rgba(52,217,160,0.25); }
+  .tag-delisting { background: rgba(240,96,138,0.1); color: var(--pink); border: 1px solid rgba(240,96,138,0.25); }
+  .tag-disposal { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(240,192,64,0.25); }
+  .tag-restructuring { background: rgba(91,156,246,0.1); color: var(--blue); border: 1px solid rgba(91,156,246,0.25); }
+
+  .ev-desc { font-size: 12px; color: var(--text2); line-height: 1.75; margin-bottom: 10px; }
+  .ev-meta { display: flex; gap: 18px; flex-wrap: wrap; }
+  .meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .meta-lbl { font-size: 9px; color: var(--text3); letter-spacing: 1.3px; text-transform: uppercase; }
+  .meta-val { font-size: 12px; color: var(--text); }
+  .meta-val.money { color: var(--accent); font-weight: 500; }
+  .ev-date { font-size: 11px; color: var(--text3); white-space: nowrap; padding-top: 2px; }
+
+  /* ── EMPTY ── */
+  .empty { text-align: center; padding: 72px 0; color: var(--text2); }
+  .empty-icon { font-size: 36px; opacity: 0.25; margin-bottom: 12px; }
+  .empty-title { font-family: 'Instrument Serif', serif; font-size: 18px; color: var(--text); opacity: 0.45; margin-bottom: 8px; }
+  .empty-sub { font-size: 12px; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11px; color: var(--text3); flex-wrap: wrap; gap: 10px;
+  }
+  footer a { color: var(--text2); text-decoration: none; }
+  footer a:hover { color: var(--text); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    .topbar { padding: 0 16px; }
+    main { padding: 20px 16px 40px; }
+    .key-bar { padding: 12px 16px; }
+    footer { padding: 14px 16px; }
+    .stats { grid-template-columns: repeat(2,1fr); }
+    .stat:nth-child(2) { border-right: none; }
+    .stat:nth-child(3) { border-top: 1px solid var(--border); }
+    .stat:nth-child(4) { border-top: 1px solid var(--border); }
+    .card { grid-template-columns: 3px 1fr; }
+    .ev-date { display: none; }
+  }
+  @media (max-width: 420px) {
+    .stats { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <span class="brand-name">Hassal Inc <span style="font-size:13px;opacity:0.5;font-family:'DM Mono',monospace;font-style:normal;">ZA</span></span>
+  </div>
+  <div class="topbar-right">
+    <span class="ts-label">Last updated:</span>
+    <span class="ts-val" id="ts">–</span>
+  </div>
+</header>
+
+<!-- API KEY ENTRY -->
+<div class="key-bar" id="keyBar">
+  <span class="key-label">API Key</span>
+  <input class="key-input" type="password" id="keyIn" placeholder="sk-ant-api03-..." autocomplete="off" />
+  <button class="key-save" onclick="saveKey()">Save & Continue</button>
+  <span class="key-hint">
+    Your key is only used to call Anthropic's API directly from this page — never stored on any server.
+    Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
+  </span>
+</div>
+<div class="key-bar key-active" id="keyActive">
+  <div class="ka-dot"></div>
+  <span class="ka-text">API key active</span>
+  <span class="ka-change" onclick="resetKey()">change key</span>
+</div>
+
+<!-- MAIN CONTENT -->
+<main>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="ctrl-group">
+      <div class="ctrl-label">Event type</div>
+      <div class="chips" id="chips">
+        <button class="chip on" data-t="all">All events</button>
+        <button class="chip" data-t="acquisition">Acquisitions</button>
+        <button class="chip" data-t="merger">Mergers</button>
+        <button class="chip" data-t="ipo">JSE / IPO</button>
+        <button class="chip" data-t="pe">PE / Buyout</button>
+        <button class="chip" data-t="bee">BEE</button>
+        <button class="chip" data-t="delisting">Delistings</button>
+        <button class="chip" data-t="disposal">Disposals</button>
+      </div>
+    </div>
+    <select id="sector">
+      <option value="all sectors">All Sectors</option>
+      <option value="technology">Technology</option>
+      <option value="mining and resources">Mining & Resources</option>
+      <option value="financial services">Financial Services</option>
+      <option value="retail">Retail</option>
+      <option value="healthcare">Healthcare</option>
+      <option value="real estate and property">Real Estate & Property</option>
+      <option value="agriculture">Agriculture</option>
+      <option value="energy">Energy</option>
+      <option value="telecommunications">Telecommunications</option>
+      <option value="media">Media</option>
+      <option value="construction and infrastructure">Construction & Infrastructure</option>
+      <option value="manufacturing">Manufacturing</option>
+      <option value="hospitality and tourism">Hospitality & Tourism</option>
+      <option value="transport and logistics">Transport & Logistics</option>
+    </select>
+    <button class="fetch-btn" id="fetchBtn" onclick="go()">↓ Fetch Latest</button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><div class="stat-lbl">Deals found</div><div class="stat-val" id="sTotal">–</div></div>
+    <div class="stat"><div class="stat-lbl">Total value</div><div class="stat-val a" id="sValue">–</div></div>
+    <div class="stat"><div class="stat-lbl">Largest deal</div><div class="stat-val g" id="sLargest">–</div></div>
+    <div class="stat"><div class="stat-lbl">Hot sector</div><div class="stat-val t" id="sSector">–</div></div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary" id="summaryBox" style="display:none">
+    <div class="summary-hdr">Market intelligence</div>
+    <div id="summaryTxt"></div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="err-box" id="errBox" style="display:none"></div>
+
+  <!-- LOADER -->
+  <div class="loader" id="loader" style="display:none">
+    <div class="spinner"></div>
+    <div class="loader-txt" id="loaderTxt">Scanning deal intelligence…</div>
+  </div>
+
+  <!-- FEED -->
+  <div id="feed" style="display:none">
+    <div class="feed-hdr">
+      <span class="feed-lbl">Recent liquidity events</span>
+      <span class="feed-count" id="feedCnt"></span>
+    </div>
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <!-- EMPTY -->
+  <div class="empty" id="empty">
+    <div class="empty-icon">◎</div>
+    <div class="empty-title">No events loaded</div>
+    <div class="empty-sub">Enter your API key above, then click <strong>↓ Fetch Latest</strong> to scan South African deals</div>
+  </div>
+
+</main>
+
+<footer>
+  <span>Hassal Inc — South African deal intelligence powered by Claude + web search</span>
+  <a href="https://console.anthropic.com/settings/keys" target="_blank">Get an API key →</a>
+</footer>
+
+<script>
+let apiKey = '';
+let activeType = 'all';
+const phrases = [
+  'Scanning SA deal flow…',
+  'Searching M&A databases…',
+  'Analyzing acquisition signals…',
+  'Querying Competition Commission filings…',
+  'Processing JSE SENS announcements…',
+  'Compiling liquidity events…',
+  'Checking DealMakers SA records…',
+];
+
+// ── Key management
+document.getElementById('keyIn').addEventListener('keydown', e => { if (e.key === 'Enter') saveKey(); });
+
+function saveKey() {
+  const v = document.getElementById('keyIn').value.trim();
+  if (!v) return alert('Please paste your Anthropic API key.');
+  if (!v.startsWith('sk-ant-')) return alert('That doesn\'t look right — Anthropic keys start with sk-ant-');
+  apiKey = v;
+  document.getElementById('keyBar').classList.add('hidden');
+  document.getElementById('keyActive').classList.add('show');
+}
+function resetKey() {
+  apiKey = '';
+  document.getElementById('keyIn').value = '';
+  document.getElementById('keyBar').classList.remove('hidden');
+  document.getElementById('keyActive').classList.remove('show');
+}
+
+// ── Filter chips
+document.getElementById('chips').addEventListener('click', e => {
+  const b = e.target.closest('.chip');
+  if (!b) return;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  b.classList.add('on');
+  activeType = b.dataset.t;
+});
+
+// ── Fetch
+async function go() {
+  if (!apiKey) { showErr('Please enter your Anthropic API key first.'); return; }
+
+  const btn = document.getElementById('fetchBtn');
+  const sector = document.getElementById('sector').value;
+  const typeStr = activeType === 'all'
+    ? 'acquisitions, mergers, delistings, disposals, IPOs, private equity buyouts, BEE transactions, and leveraged buyouts'
+    : activeType === 'delisting' ? 'delistings and voluntary removals from the JSE'
+    : activeType === 'disposal' ? 'disposals, divestments, and asset sales'
+    : activeType + 's';
+
+  btn.disabled = true; btn.textContent = 'Scanning…';
+  document.getElementById('loaderTxt').textContent = phrases[Math.floor(Math.random() * phrases.length)];
+  show('loader'); hide('empty'); hide('feed'); hide('summaryBox'); hide('errBox');
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const system = `You are a South African financial intelligence analyst specializing in M&A deals, liquidity events, and corporate transactions in South Africa.
+
+Use web search to find the most recent South African business sales, acquisitions, mergers, JSE delistings, IPOs, private equity buyouts, BEE transactions, disposals, unbundlings, business rescue proceedings, Competition Commission merger approvals, and other liquidity events involving South African companies or assets.
+
+Key sources to search: JSE SENS announcements, Competition Commission SA merger decisions, DealMakers SA, Moneyweb, BizNews, Fin24/News24, BusinessLIVE, IOL Business Report, Engineering News.
+
+Only include deals where at least one party is a South African company, the target operates in South Africa, or the deal involves South African assets.
+
+Return ONLY raw JSON — no markdown fences, no preamble, no explanation. Structure:
+{
+  "summary": "2-3 sentence commentary on current South African M&A and deal activity trends",
+  "stats": {
+    "totalDeals": <number>,
+    "estimatedTotalValue": "<formatted e.g. R12.5B or $800M>",
+    "largestDeal": "<company or deal name>",
+    "hotSector": "<sector name>"
+  },
+  "events": [
+    {
+      "company": "<target company>",
+      "type": "<acquisition|merger|ipo|pe|buyout|bee|delisting|disposal|restructuring>",
+      "description": "<2-3 sentence summary with parties, deal value context, strategic rationale, and Competition Commission status if applicable>",
+      "dealValue": "<e.g. R1.2B or $50M or Undisclosed>",
+      "sector": "<sector>",
+      "acquirer": "<acquiring party or N/A>",
+      "date": "<e.g. Mar 2026>"
+    }
+  ]
+}
+Return 8–15 events, most recent first. Include JSE-listed company deals, private equity, BEE transactions, Competition Commission rulings, delistings, and cross-border deals involving SA companies. Today is ${today}.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 5000,
+        system,
+        messages: [{ role: 'user', content: `Search for the most recent and significant South African ${typeStr} in the ${sector} sector from the last 90 days. Focus on deals involving JSE-listed companies, Competition Commission merger approvals, South African private equity transactions, BEE deals, delistings, and cross-border deals involving SA businesses. Return only raw JSON.` }],
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }]
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 401) throw new Error('Invalid API key — please check and re-enter.');
+      if (res.status === 429) throw new Error('Rate limit hit — please wait a moment and try again.');
+      throw new Error(data.error?.message || `HTTP ${res.status}`);
+    }
+
+    const tb = data.content.filter(b => b.type === 'text').pop();
+    if (!tb?.text) throw new Error('No response received — please try again.');
+
+    let raw = tb.text.trim().replace(/```json\n?|\n?```/g, '').trim();
+    const s = raw.indexOf('{'), e2 = raw.lastIndexOf('}');
+    if (s < 0 || e2 < 0) throw new Error('Could not parse response — please try again.');
+    const result = JSON.parse(raw.slice(s, e2 + 1));
+    render(result);
+    document.getElementById('ts').textContent = new Date().toLocaleTimeString();
+
+  } catch(err) {
+    showErr(err.message);
+    show('empty');
+  } finally {
+    btn.disabled = false; btn.textContent = '↓ Fetch Latest';
+    hide('loader');
+  }
+}
+
+function render(d) {
+  document.getElementById('sTotal').textContent   = d.stats?.totalDeals ?? d.events?.length ?? '–';
+  document.getElementById('sValue').textContent   = d.stats?.estimatedTotalValue ?? '–';
+  document.getElementById('sLargest').textContent = d.stats?.largestDeal ?? '–';
+  document.getElementById('sSector').textContent  = d.stats?.hotSector ?? '–';
+
+  if (d.summary) {
+    document.getElementById('summaryTxt').textContent = d.summary;
+    show('summaryBox');
+  }
+
+  const cont = document.getElementById('cards');
+  cont.innerHTML = '';
+  const evs = d.events || [];
+  document.getElementById('feedCnt').textContent = evs.length + ' events';
+
+  evs.forEach((ev, i) => {
+    const type = (ev.type || 'acquisition').toLowerCase().replace(/[^a-z]/g, '');
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.style.animationDelay = (i * 0.055) + 's';
+    el.innerHTML = `
+      <div class="card-bar bar-${type}"></div>
+      <div>
+        <div class="card-top">
+          <span class="co-name">${x(ev.company)}</span>
+          <span class="ev-tag tag-${type}">${x(ev.type)}</span>
+        </div>
+        <div class="ev-desc">${x(ev.description)}</div>
+        <div class="ev-meta">
+          ${ev.dealValue ? `<div class="meta-item"><div class="meta-lbl">Deal value</div><div class="meta-val money">${x(ev.dealValue)}</div></div>` : ''}
+          ${ev.acquirer && ev.acquirer !== 'N/A' ? `<div class="meta-item"><div class="meta-lbl">Acquirer</div><div class="meta-val">${x(ev.acquirer)}</div></div>` : ''}
+          ${ev.sector ? `<div class="meta-item"><div class="meta-lbl">Sector</div><div class="meta-val">${x(ev.sector)}</div></div>` : ''}
+        </div>
+      </div>
+      <div class="ev-date">${x(ev.date || '')}</div>
+    `;
+    cont.appendChild(el);
+  });
+  show('feed');
+}
+
+function showErr(msg) { const e = document.getElementById('errBox'); e.textContent = msg; show('errBox'); }
+function show(id) { document.getElementById(id).style.display = 'block'; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+function x(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
