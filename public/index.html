@@ -582,7 +582,9 @@ function showErr(msg) { const e = document.getElementById('errBox'); e.textConte
 function show(id) { document.getElementById(id).style.display = 'block'; }
 function hide(id) { document.getElementById(id).style.display = 'none'; }
 function x(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // Strip Claude citation tags like <cite index="1">...</cite> and <source>...</source>
+  s = String(s||'').replace(/<cite[^>]*>.*?<\/cite>/gi, '').replace(/<\/?source[^>]*>/gi, '').replace(/<[^>]+>/g, '').trim();
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 </body>
