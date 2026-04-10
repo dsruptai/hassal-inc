@@ -711,9 +711,9 @@ COMPETITION COMMISSION SA MERGER DECISIONS (Jan-Apr 2026, from official PDF stat
     if (!tb?.text) throw new Error('No response received — please try again.');
 
     let raw = tb.text.trim().replace(/```json\n?|\n?```/g, '').trim();
-    const s = raw.indexOf('{'), e2 = raw.lastIndexOf('}');
-    if (s < 0 || e2 < 0) throw new Error('Could not parse response — please try again.');
-    const result = JSON.parse(raw.slice(s, e2 + 1));
+    const s = raw.indexOf('{');
+    if (s < 0) throw new Error('Could not parse response — please try again.');
+    const result = repairJSON(raw.slice(s));
     render(result);
     document.getElementById('ts').textContent = new Date().toLocaleTimeString();
 
@@ -816,6 +816,40 @@ Find DIFFERENT deals from Competition Commission SA, JSE SENS, BusinessTech, Mon
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 5v14M5 12l7 7 7-7"/></svg> Load More Deals';
     btn.style.display = 'inline-flex'; // Always show after first load-more
   }
+}
+
+function repairJSON(str) {
+  // Try parsing as-is first
+  try { return JSON.parse(str); } catch(e) {}
+
+  // Truncated JSON — remove last incomplete element and close brackets
+  let s = str;
+  // Remove trailing incomplete object (no closing brace)
+  s = s.replace(/,\s*\{[^}]*$/, '');
+  // Remove trailing incomplete string value
+  s = s.replace(/,\s*"[^"]*$/, '');
+  // Count open brackets and close them
+  let opens = 0, closes = 0;
+  for (const c of s) { if (c === '[') opens++; if (c === ']') closes++; }
+  for (let i = 0; i < opens - closes; i++) s += ']';
+  opens = 0; closes = 0;
+  for (const c of s) { if (c === '{') opens++; if (c === '}') closes++; }
+  for (let i = 0; i < opens - closes; i++) s += '}';
+  try { return JSON.parse(s); } catch(e) {}
+
+  // Last resort: find the last complete event object
+  const lastComplete = s.lastIndexOf('}');
+  if (lastComplete > 0) {
+    let truncated = s.slice(0, lastComplete + 1);
+    opens = 0; closes = 0;
+    for (const c of truncated) { if (c === '[') opens++; if (c === ']') closes++; }
+    for (let i = 0; i < opens - closes; i++) truncated += ']';
+    opens = 0; closes = 0;
+    for (const c of truncated) { if (c === '{') opens++; if (c === '}') closes++; }
+    for (let i = 0; i < opens - closes; i++) truncated += '}';
+    try { return JSON.parse(truncated); } catch(e) {}
+  }
+  throw new Error('Could not parse response — please try again.');
 }
 
 function showErr(msg) { const e = document.getElementById('errBox'); e.textContent = msg; show('errBox'); }
