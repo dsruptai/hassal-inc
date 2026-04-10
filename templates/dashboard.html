@@ -5,75 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hassal Inc — SA M&amp;A Monitor</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <header class="header">
-        <div>
-            <h1>Hassal <span>Inc</span></h1>
-            <div class="subtitle">South African M&amp;A &amp; Liquidity Event Intelligence</div>
+        <div class="header-left">
+            <a href="/" class="logo">
+                <div class="logo-mark">H</div>
+                <div class="logo-text">Hassal<span>Inc</span></div>
+            </a>
+            <nav>
+                <a href="/" class="active">Dashboard</a>
+                <a href="/about">Sources</a>
+            </nav>
         </div>
         <div class="header-right">
-            <div class="last-updated">Last updated: {{ last_updated }}</div>
+            <span class="last-updated">Updated {{ last_updated }}</span>
             <button class="btn btn-primary" onclick="triggerScrape()" id="scrapeBtn">
-                Refresh Data
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                Refresh
             </button>
         </div>
     </header>
 
-    <nav>
-        <a href="/" class="active">Dashboard</a>
-        <a href="/about">About &amp; Sources</a>
-    </nav>
-
-    <div class="stats-bar">
-        <div class="stat-card">
-            <div class="number">{{ total }}</div>
-            <div class="label">Total Deals Tracked</div>
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-title">Overview</div>
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-value">{{ total }}</div>
+                    <div class="stat-label">Total Deals</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">{{ sources|length }}</div>
+                    <div class="stat-label">Active Sources</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">{{ deal_types|length }}</div>
+                    <div class="stat-label">Deal Categories</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">{{ deals|length }}</div>
+                    <div class="stat-label">Showing</div>
+                </div>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="number">{{ sources|length }}</div>
-            <div class="label">Active Sources</div>
-        </div>
-        <div class="stat-card">
-            <div class="number">{{ deal_types|length }}</div>
-            <div class="label">Deal Categories</div>
-        </div>
-        <div class="stat-card">
-            <div class="number">{{ deals|length }}</div>
-            <div class="label">Recent Deals</div>
-        </div>
-    </div>
+    </section>
 
     <div class="container">
         <div class="layout">
             <div class="main-content">
                 <div class="filters">
-                    <input type="text" id="searchInput" placeholder="Search deals, companies, keywords..."
-                           onkeyup="filterDeals()">
+                    <div class="filter-input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" id="searchInput" placeholder="Search deals, companies, keywords..." onkeyup="filterDeals()">
+                    </div>
                     <select id="typeFilter" onchange="filterDeals()">
-                        <option value="">All Deal Types</option>
+                        <option value="">All types</option>
                         {% for dt in deal_types %}
                         <option value="{{ dt.deal_type }}">{{ dt.deal_type }} ({{ dt.count }})</option>
                         {% endfor %}
                     </select>
                     <select id="sourceFilter" onchange="filterDeals()">
-                        <option value="">All Sources</option>
+                        <option value="">All sources</option>
                         {% for s in sources %}
                         <option value="{{ s.source }}">{{ s.source }} ({{ s.count }})</option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <div class="deals-grid" id="dealsGrid">
+                <div class="deals-list" id="dealsGrid">
                     {% if deals %}
                         {% for deal in deals %}
-                        <div class="deal-card"
+                        <div class="deal"
                              data-type="{{ deal.deal_type }}"
                              data-source="{{ deal.source }}"
                              data-search="{{ deal.title|lower }} {{ deal.summary|lower }} {{ deal.companies|lower }}">
-                            <div class="deal-header">
+                            <div class="deal-top">
                                 <div class="deal-title">
                                     {% if deal.url %}
                                     <a href="{{ deal.url }}" target="_blank" rel="noopener">{{ deal.title }}</a>
@@ -81,78 +88,83 @@
                                     {{ deal.title }}
                                     {% endif %}
                                 </div>
-                            </div>
-                            <div class="deal-meta">
-                                <span class="badge badge-type">{{ deal.deal_type }}</span>
-                                <span class="badge badge-source">{{ deal.source }}</span>
-                                <span class="badge badge-score">Score: {{ deal.relevance_score }}</span>
+                                <div class="deal-score{% if deal.relevance_score >= 7 %} high{% endif %}">{{ deal.relevance_score }}</div>
                             </div>
                             {% if deal.summary %}
-                            <div class="deal-summary">{{ deal.summary[:300] }}{% if deal.summary|length > 300 %}...{% endif %}</div>
+                            <div class="deal-summary">{{ deal.summary[:280] }}{% if deal.summary|length > 280 %}...{% endif %}</div>
                             {% endif %}
-                            <div class="deal-footer">
-                                <div>
-                                    {% if deal.companies %}
-                                    <span class="companies">{{ deal.companies }}</span> &middot;
-                                    {% endif %}
-                                    {% if deal.published_date %}
-                                    {{ deal.published_date[:10] }}
-                                    {% endif %}
-                                </div>
-                                {% if deal.keywords_matched %}
-                                <div class="keywords">{{ deal.keywords_matched }}</div>
+                            <div class="deal-tags">
+                                <span class="tag tag-type">{{ deal.deal_type }}</span>
+                                <span class="tag tag-source">{{ deal.source }}</span>
+                                {% if deal.companies %}
+                                <span class="tag tag-company">{{ deal.companies }}</span>
                                 {% endif %}
                             </div>
+                            {% if deal.published_date or deal.keywords_matched %}
+                            <div class="deal-footer">
+                                <div class="deal-date">
+                                    {% if deal.published_date %}{{ deal.published_date[:10] }}{% endif %}
+                                </div>
+                                {% if deal.keywords_matched %}
+                                <div class="deal-keywords">{{ deal.keywords_matched }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     {% else %}
                         <div class="empty-state">
+                            <div class="empty-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" x2="17" y1="12" y2="12"/></svg>
+                            </div>
                             <h3>No deals found yet</h3>
-                            <p>Data is being collected from South African M&amp;A sources. Click "Refresh Data" to trigger a scan, or wait for the automatic hourly scan.</p>
+                            <p>Click <strong>Refresh</strong> to scan South African M&amp;A sources for the latest deals, acquisitions, and liquidity events.</p>
+                            <button class="btn btn-primary" onclick="triggerScrape()" style="margin-top: 0.5rem">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                                Scan Now
+                            </button>
                         </div>
                     {% endif %}
                 </div>
             </div>
 
             <aside class="sidebar">
+                {% if sources %}
                 <div class="sidebar-card">
-                    <h3>Sources</h3>
+                    <div class="sidebar-card-header">By Source</div>
                     {% for s in sources %}
-                    <div class="source-item">
-                        <span>{{ s.source }}</span>
-                        <span class="count">{{ s.count }}</span>
+                    <div class="sidebar-item">
+                        <span class="sidebar-item-label">{{ s.source }}</span>
+                        <span class="sidebar-item-value">{{ s.count }}</span>
                     </div>
                     {% endfor %}
-                    {% if not sources %}
-                    <div style="color: var(--text-muted); font-size: 0.85rem;">No data yet</div>
-                    {% endif %}
                 </div>
+                {% endif %}
 
+                {% if deal_types %}
                 <div class="sidebar-card">
-                    <h3>Deal Types</h3>
+                    <div class="sidebar-card-header">By Deal Type</div>
                     {% for dt in deal_types %}
-                    <div class="source-item">
-                        <span>{{ dt.deal_type }}</span>
-                        <span class="count">{{ dt.count }}</span>
+                    <div class="sidebar-item">
+                        <span class="sidebar-item-label">{{ dt.deal_type }}</span>
+                        <span class="sidebar-item-value">{{ dt.count }}</span>
                     </div>
                     {% endfor %}
-                    {% if not deal_types %}
-                    <div style="color: var(--text-muted); font-size: 0.85rem;">No data yet</div>
-                    {% endif %}
                 </div>
+                {% endif %}
 
                 <div class="sidebar-card">
-                    <h3>Monitored Sources</h3>
-                    <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.8;">
-                        Moneyweb<br>
-                        BizNews<br>
-                        Fin24 / News24<br>
-                        BusinessLIVE<br>
-                        IOL Business Report<br>
-                        Engineering News<br>
-                        JSE SENS<br>
-                        DealMakers SA<br>
-                        Competition Commission SA
+                    <div class="sidebar-card-header">Monitored Sources</div>
+                    <div class="sidebar-sources">
+                        <div class="source-dot">JSE SENS</div>
+                        <div class="source-dot">Competition Commission SA</div>
+                        <div class="source-dot">DealMakers SA</div>
+                        <div class="source-dot">Moneyweb</div>
+                        <div class="source-dot">BizNews</div>
+                        <div class="source-dot">Fin24 / News24</div>
+                        <div class="source-dot">BusinessLIVE</div>
+                        <div class="source-dot">IOL Business Report</div>
+                        <div class="source-dot">Engineering News</div>
                     </div>
                 </div>
             </aside>
@@ -160,42 +172,52 @@
     </div>
 
     <footer class="footer">
-        <p>&copy; 2026 Hassal Inc &mdash; South African M&amp;A &amp; Liquidity Event Intelligence</p>
-        <p style="margin-top: 0.5rem;">
-            Data sourced from JSE SENS, DealMakers SA, Competition Commission, Moneyweb, BizNews, Fin24, BusinessLIVE, and more.
-        </p>
+        <p><span class="footer-brand">Hassal Inc</span> &mdash; South African M&amp;A &amp; Liquidity Event Intelligence</p>
+        <p>Aggregating JSE SENS, Competition Commission, DealMakers SA, and leading SA financial news.</p>
     </footer>
+
+    <div class="toast" id="toast"></div>
 
     <script>
         function filterDeals() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             const typeFilter = document.getElementById('typeFilter').value;
             const sourceFilter = document.getElementById('sourceFilter').value;
-            const cards = document.querySelectorAll('.deal-card');
+            const cards = document.querySelectorAll('.deal');
+            let visible = 0;
 
             cards.forEach(card => {
                 const matchSearch = !search || card.dataset.search.includes(search);
                 const matchType = !typeFilter || card.dataset.type === typeFilter;
                 const matchSource = !sourceFilter || card.dataset.source === sourceFilter;
-                card.style.display = (matchSearch && matchType && matchSource) ? '' : 'none';
+                const show = matchSearch && matchType && matchSource;
+                card.style.display = show ? '' : 'none';
+                if (show) visible++;
             });
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 4000);
         }
 
         async function triggerScrape() {
             const btn = document.getElementById('scrapeBtn');
-            const originalText = btn.textContent;
-            btn.innerHTML = 'Scanning...<span class="spinner"></span>';
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner"></span> Scanning...';
             btn.disabled = true;
 
             try {
                 const resp = await fetch('/api/scrape', { method: 'POST' });
                 const data = await resp.json();
-                alert(data.message);
-                window.location.reload();
+                showToast(data.message, 'success');
+                setTimeout(() => window.location.reload(), 1500);
             } catch (err) {
-                alert('Scrape failed: ' + err.message);
+                showToast('Scan failed: ' + err.message, 'error');
             } finally {
-                btn.textContent = originalText;
+                btn.innerHTML = originalHTML;
                 btn.disabled = false;
             }
         }
