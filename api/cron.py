@@ -175,8 +175,23 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
-            # Check if this is a test request
             is_test = "test" in self.path
+
+            if is_test and RESEND_KEY:
+                # Send a test email with sample data
+                sample = [
+                    {"company": "Fairfield Dairy / Ladismith Cheese", "type": "acquisition", "description": "Competition Commission approved with conditions. Fairfield (First Choice brand) acquires Ladismith Cheese Company with BEE supplier development commitments.", "dealValue": "Undisclosed", "sector": "Dairy / FMCG", "acquirer": "Fairfield Dairy", "date": "Apr 2026"},
+                    {"company": "Bevco (PepsiCo) / Twizza", "type": "bee", "description": "The Beverage Company acquires Twizza. Approved with ESOP conditions — all Twizza workers to be included within 12 months.", "dealValue": "Undisclosed", "sector": "Beverages / FMCG", "acquirer": "Bevco", "date": "Mar 2026"},
+                    {"company": "DHL Supply Chain / Vital Distribution", "type": "acquisition", "description": "DHL acquires Vital Distribution Solutions, Staffing Logistics and Vital Fleet. Approved without conditions.", "dealValue": "Undisclosed", "sector": "Transport & Logistics", "acquirer": "DHL Supply Chain", "date": "Apr 2026"},
+                    {"company": "Cape Forests / MTO Forestry", "type": "merger", "description": "Cape Forests acquires MTO Forestry and PG Bison Southern Cape. Sawlog supply guarantees and BEE commitments.", "dealValue": "Undisclosed", "sector": "Forestry / Timber", "acquirer": "Cape Forests", "date": "Apr 2026"},
+                    {"company": "Google / Wiz Inc", "type": "acquisition", "description": "Google acquires cloud security platform Wiz. Approved by SA Competition Commission without conditions.", "dealValue": "$32B", "sector": "Technology / Cloud Security", "acquirer": "Google LLC", "date": "Mar 2026"},
+                ]
+                try:
+                    email_sent = send_email(sample)
+                except Exception as e:
+                    email_sent = False
+                self._respond(200, {"ok": True, "test": True, "email_sent": email_sent, "sample_deals": len(sample)})
+                return
 
             events = fetch_deals()
             seen = load_seen()
