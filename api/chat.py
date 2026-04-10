@@ -10,7 +10,7 @@ class handler(BaseHTTPRequestHandler):
         try:
             import urllib.request
 
-            api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+            api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
             if not api_key:
                 self._respond(500, {"error": "ANTHROPIC_API_KEY not configured"})
                 return
