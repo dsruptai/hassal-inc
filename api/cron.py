@@ -165,7 +165,11 @@ def send_email(new_deals):
     )
 
     with urllib.request.urlopen(req, timeout=30) as resp:
-        return resp.status == 200
+        resp_body = resp.read().decode("utf-8")
+        return resp.status in (200, 201)
+
+
+_last_email_error = None
 
 
 class handler(BaseHTTPRequestHandler):
@@ -186,11 +190,16 @@ class handler(BaseHTTPRequestHandler):
                     {"company": "Cape Forests / MTO Forestry", "type": "merger", "description": "Cape Forests acquires MTO Forestry and PG Bison Southern Cape. Sawlog supply guarantees and BEE commitments.", "dealValue": "Undisclosed", "sector": "Forestry / Timber", "acquirer": "Cape Forests", "date": "Apr 2026"},
                     {"company": "Google / Wiz Inc", "type": "acquisition", "description": "Google acquires cloud security platform Wiz. Approved by SA Competition Commission without conditions.", "dealValue": "$32B", "sector": "Technology / Cloud Security", "acquirer": "Google LLC", "date": "Mar 2026"},
                 ]
+                email_error = None
                 try:
                     email_sent = send_email(sample)
+                except urllib.error.HTTPError as e:
+                    email_sent = False
+                    email_error = f"{e.code}: {e.read().decode('utf-8')}"
                 except Exception as e:
                     email_sent = False
-                self._respond(200, {"ok": True, "test": True, "email_sent": email_sent, "sample_deals": len(sample)})
+                    email_error = str(e)
+                self._respond(200, {"ok": True, "test": True, "email_sent": email_sent, "sample_deals": len(sample), "email_error": email_error})
                 return
 
             events = fetch_deals()
