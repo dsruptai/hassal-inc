@@ -4,6 +4,8 @@ import os
 import json
 import hashlib
 import urllib.request
+import http.client
+import ssl
 from http.server import BaseHTTPRequestHandler
 from datetime import datetime
 
@@ -154,19 +156,19 @@ def send_email(new_deals):
         "html": html,
     }
 
-    req = urllib.request.Request(
-        "https://api.resend.com/emails",
-        data=json.dumps(email_payload).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {RESEND_KEY}",
-        },
-        method="POST",
-    )
-
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        resp_body = resp.read().decode("utf-8")
-        return resp.status in (200, 201)
+    body = json.dumps(email_payload).encode("utf-8")
+    ctx = ssl.create_default_context()
+    conn = http.client.HTTPSConnection("api.resend.com", timeout=30, context=ctx)
+    conn.request("POST", "/emails", body=body, headers={
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {RESEND_KEY}",
+        "User-Agent": "Mozilla/5.0 (compatible; HassalInc/1.0)",
+        "Accept": "application/json",
+    })
+    resp = conn.getresponse()
+    resp_body = resp.read().decode("utf-8")
+    conn.close()
+    return resp.status in (200, 201)
 
 
 _last_email_error = None
