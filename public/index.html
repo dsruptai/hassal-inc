@@ -428,7 +428,7 @@ footer b { color: var(--text2); font-weight: 600; }
 
 <footer>
   <span><b>Hassal Inc</b> — South African deal intelligence powered by Claude + web search</span>
-  <span>JSE SENS · Competition Commission · DealMakers SA · Moneyweb · BizNews · Fin24</span>
+  <span>Competition Commission · JSE SENS · DealMakers SA · BusinessTech · BusinessLIVE · News24 · Daily Investor · BizCommunity · Moneyweb · BizNews</span>
 </footer>
 
 <script>
@@ -467,28 +467,23 @@ async function go() {
 
   const today = new Date().toISOString().split('T')[0];
 
-  const system = `SA M&A analyst. Use web search AND the Competition Commission data below to find recent South African deals. Return ONLY raw JSON:
-{"summary":"1-2 sentences on SA deal trends","stats":{"totalDeals":0,"estimatedTotalValue":"R0","largestDeal":"","hotSector":""},"events":[{"company":"","type":"acquisition|merger|ipo|pe|buyout|bee|delisting|disposal|restructuring","description":"1-2 sentences","dealValue":"R0 or Undisclosed","sector":"","acquirer":"or N/A","date":"Mon YYYY"}]}
-Return 8-12 events. Only SA companies/assets. Today: ${today}.
+  const system = `SA M&A analyst. Use web search AND the Competition Commission decisions below to compile recent South African deals. Search these sources: BusinessTech, BusinessLIVE, News24 Business, Daily Investor, Business Report, BizCommunity, Moneyweb, BizNews, Fin24, JSE SENS, DealMakers SA. Return ONLY raw JSON:
+{"summary":"2-3 sentences on SA deal trends","stats":{"totalDeals":0,"estimatedTotalValue":"R0","largestDeal":"","hotSector":""},"events":[{"company":"","type":"acquisition|merger|ipo|pe|buyout|bee|delisting|disposal|restructuring","description":"1-2 sentences","dealValue":"R0 or Undisclosed","sector":"","acquirer":"or N/A","date":"Mon YYYY"}]}
+Return 10-15 events, mixing Competition Commission data with web search results. Only SA companies/assets. Today: ${today}.
 
-CONFIRMED COMPETITION COMMISSION DECISIONS (use these + web search for more):
+COMPETITION COMMISSION SA MERGER DECISIONS (Jan-Apr 2026, from official PDF statements at compcom.co.za):
 
-10 Apr 2026:
-- Fairfield Dairy acquiring Ladismith Cheese Company — APPROVED WITH CONDITIONS — Dairy sector — BEE/supplier development commitments
-- Tsebo Solutions acquiring UCT Food Services — APPROVED WITH CONDITIONS — Catering/facilities — Employment moratorium
-- Saxony SA Property acquiring Durban Workshop from Vukile — APPROVED — Real Estate — Retail property in KZN
-- GHN Resources acquiring Goedehoop North Colliery from Thungela — APPROVED — Mining/Coal — Non-operational mine in Mpumalanga
-
-02 Apr 2026:
-- Cape Forests acquiring MTO Forestry & PG Bison Southern Cape — APPROVED WITH CONDITIONS — Forestry/Timber — Sawlog supply commitments, BEE conditions
-- AttBid acquiring RMB Holdings (38.5% interest in Atterbury Property) — APPROVED — Real Estate — Property development portfolio
-- WBHO Construction acquiring Zamori 172 (DPRO Project Management) — APPROVED — Construction/Renewable Energy — Solar energy projects
-- DHL Supply Chain acquiring Vital Distribution Solutions, Staffing Logistics, Vital Fleet — APPROVED — Transport & Logistics
-
-26 Mar 2026:
-- Midlands Mall (JBSA Props) acquiring Liberty Midlands Mall from Liberty Group — APPROVED WITH CONDITIONS — Real Estate — 77,293m² shopping centre in Pietermaritzburg
-- Super Group Dealerships acquiring Stucky Motors Chery Omoda Jaecoo dealership in Mbombela — APPROVED — Automotive/Retail
-- DHL Supply Chain acquiring Vital Distribution, Staffing Logistics, Vital Fleet — APPROVED — Logistics/Supply Chain`;
+10 Apr: Fairfield Dairy/Ladismith Cheese—APPROVED W/CONDITIONS—Dairy|Tsebo Solutions/UCT Food Services—APPROVED W/CONDITIONS—Catering|GHN Resources/Goedehoop North Colliery(Thungela)—APPROVED—Coal Mining
+02 Apr: Cape Forests/MTO Forestry+PG Bison Southern Cape—APPROVED W/CONDITIONS—Forestry/Timber|AttBid/RMB Holdings(Atterbury Property 38.5%)—APPROVED—Real Estate|WBHO Construction/Zamori 172(DPRO solar projects)—APPROVED—Construction/Renewable Energy|DHL Supply Chain/Vital Distribution+Staffing Logistics+Vital Fleet—APPROVED—Logistics
+26 Mar: Midlands Mall(JBSA)/Liberty Midlands Mall(Liberty Group)—APPROVED W/CONDITIONS—Retail Property 77k sqm KZN|Super Group/Stucky Motors Chery Omoda Jaecoo Mbombela—APPROVED—Automotive|DHL/Vital Distribution—APPROVED—Logistics
+11 Mar: Discovery Propco+Growthpoint/1 Discovery Place—APPROVED—Real Estate/Financial Services|Bevco(PepsiCo bottler)/Twizza—APPROVED W/CONDITIONS—Beverages/FMCG, ESOP conditions
+05 Mar: TWK Investments/MTO North Lowveld forestry—APPROVED W/CONDITIONS—Forestry|CFAO Mobility/NMI Isuzu Johannesburg—APPROVED W/CONDITIONS—Automotive|Google/Wiz Inc—APPROVED—Cloud Security/Technology
+27 Feb: Orient Victoria Capital+KP Partners/King Price Financial Services—APPROVED—Insurance/Fintech|IBM/Confluent Inc—APPROVED—Data Streaming/Technology|NEC Corporation/CSG Systems International—APPROVED—Telecom Software|RSI SmartCap/RSI North America(truck caps/canopies SA manufacturer)—APPROVED W/CONDITIONS—Automotive Parts
+20 Feb: Epsidon Technology/Dax Data—APPROVED—ICT Distribution|Baker Hughes/Chart Industries(mine cooling systems SA)—APPROVED W/CONDITIONS—Energy Technology|Sangiro Fresh Chicken/Chickos Chicken—APPROVED—Poultry/Food|Pick n Pay Retailers/PnP Ballito Junction franchise—APPROVED—Grocery Retail|Intertoll(Gautrain)/GPR Leasing Africa(rail wagons)—APPROVED—Transport/Rail|Turner&Townsend/Profica Management—APPROVED—Construction Advisory
+12 Feb: Curro Holdings/CAPMAC+Meridian Schools—APPROVED—Education|Norfund+Mahlako/Anthem Group Holdings—APPROVED—Renewable Energy(solar+wind IPP)|Exemplar REITail/Steelpoort Shopping Centre 30k sqm—APPROVED—Retail Property|Nexture(Investindustrial)/Frulact—APPROVED W/CONDITIONS—Food Ingredients Manufacturing|Vertice BidCo(Avacare/Amethis)/Vertice Medtech(Ethos PE)—APPROVED W/CONDITIONS—Healthcare Tech/Medical Devices
+05 Feb: Carlyle Group/BASF Coatings Division(SA operations)—APPROVED—Chemicals/PE Buyout|Senwes Equipment/AMC Equipment(8 John Deere dealerships)—APPROVED—Agricultural Equipment|Datamine/Mineware Africa—APPROVED W/CONDITIONS—Mining Software|CDR Fund/Sealed Air Corporation—APPROVED—Packaging|Hollard Life/OMART insurance policy book(Old Mutual)—APPROVED—Insurance|BrillianceCare/L'Oréal Manufacturing Midrand—APPROVED W/CONDITIONS—Cosmetics/FMCG Manufacturing
+29 Jan: Premier Group/RFG Holdings(Rhodes,Bull Brand,Squish)—APPROVED W/CONDITIONS—FMCG/Food Manufacturing,3yr no-retrenchment|GEPF(PIC)/CG Zinyana Africa(mining services+drones)—APPROVED—Mining Services|Exxaro(Cennergi)/Acciona Energy SA(solar Kathu+wind Gouda)—APPROVED—Renewable Energy|HPF Properties(Southern Sun)+Pareto(GEPF)/Sandton Sun+Convention Centre precinct—APPROVED—Hotels/Hospitality|Afrirent/Busmark 2000(in business rescue)—APPROVED—Bus Manufacturing|Redmont/Gunret Foods(KFC franchises)—APPROVED W/CONDITIONS—QSR|BrillianceCare/L'Oréal Manufacturing Midrand—APPROVED W/CONDITIONS—Cosmetics Manufacturing
+22 Jan: STANLIB Infrastructure Fund II/Cassava Africa Data Centres SA—APPROVED—Digital Infrastructure/Data Centres|Super Group/Dig Earthmoving+Dig Mining+Dig Plant Hire—APPROVED—Mining Services/Plant Leasing|Motus Group/Penta Menlyn dealership(Chery,Suzuki)—APPROVED—Automotive Retail|Lone Star Fund XII/Hillenbrand Inc—APPROVED—Industrial Manufacturing/PE|Fairvest/Jozini Mall+Tugela Ferry Mall KZN—APPROVED—Retail Property`;
 
   try {
     const res = await fetch('/api/chat', {
@@ -496,9 +491,9 @@ CONFIRMED COMPETITION COMMISSION DECISIONS (use these + web search for more):
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 3000,
+        max_tokens: 4000,
         system,
-        messages: [{ role: 'user', content: `Find recent South African ${typeStr} in ${sector} from the last 60 days. Search JSE SENS, Competition Commission, DealMakers SA, Moneyweb, BizNews, Fin24. Return raw JSON only.` }],
+        messages: [{ role: 'user', content: `Find recent South African ${typeStr} in ${sector} from the last 90 days. Combine the Competition Commission decisions provided with web search results from BusinessTech, BusinessLIVE, News24 Business, Daily Investor, BizCommunity, Business Report, Moneyweb, BizNews, Fin24, JSE SENS, DealMakers SA. Include deal values where known. Return raw JSON only.` }],
         tools: [{ type: 'web_search_20250305', name: 'web_search' }]
       })
     });
