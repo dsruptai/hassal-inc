@@ -99,3 +99,22 @@ async def cron_scrape():
 @app.get("/about", response_class=HTMLResponse)
 async def about(request: Request):
     return templates.TemplateResponse("about.html", {"request": request})
+
+
+@app.get("/api/debug")
+async def debug():
+    """Debug endpoint to inspect Vercel file structure."""
+    api_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(api_dir)
+    return {
+        "__file__": os.path.abspath(__file__),
+        "api_dir": api_dir,
+        "api_dir_contents": os.listdir(api_dir) if os.path.isdir(api_dir) else "NOT A DIR",
+        "parent_dir": parent_dir,
+        "parent_dir_contents": os.listdir(parent_dir) if os.path.isdir(parent_dir) else "NOT A DIR",
+        "template_dir": TEMPLATE_DIR,
+        "template_dir_exists": os.path.isdir(TEMPLATE_DIR),
+        "template_dir_contents": os.listdir(TEMPLATE_DIR) if os.path.isdir(TEMPLATE_DIR) else "NOT A DIR",
+        "cwd": os.getcwd(),
+        "cwd_contents": os.listdir(os.getcwd()),
+    }
