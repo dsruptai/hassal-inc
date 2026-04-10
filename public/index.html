@@ -294,6 +294,67 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 
 .ev-date { font-size: 0.75rem; color: var(--text3); white-space: nowrap; padding-top: 0.15rem; font-weight: 500; }
 
+/* ── VIEW TOGGLE ── */
+.view-toggle { display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 2px; }
+.vt-btn { background: none; border: none; color: var(--text3); cursor: pointer; padding: 0.3rem 0.45rem; border-radius: 5px; display: flex; align-items: center; transition: all 0.15s; }
+.vt-btn:hover { color: var(--text2); }
+.vt-btn.active { background: var(--surface3); color: var(--text); }
+
+/* ── FEED FILTERS ── */
+.feed-filters { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.feed-search {
+  flex: 1; min-width: 180px;
+  background: var(--bg2); border: 1px solid var(--border); color: var(--text);
+  padding: 0.45rem 0.75rem; border-radius: var(--r-sm);
+  font-size: 0.82rem; font-family: inherit; outline: none; transition: border-color 0.15s;
+}
+.feed-search::placeholder { color: var(--text3); }
+.feed-search:focus { border-color: var(--accent); }
+.feed-filters select {
+  background: var(--bg2); border: 1px solid var(--border); color: var(--text2);
+  padding: 0.45rem 1.8rem 0.45rem 0.65rem; border-radius: var(--r-sm);
+  font-size: 0.8rem; font-family: inherit; cursor: pointer; outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a4e63'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 0.5rem center;
+}
+
+/* ── TABLE VIEW ── */
+.deal-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.deal-table th {
+  text-align: left; padding: 0.6rem 0.75rem;
+  font-size: 0.68rem; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky; top: 60px; z-index: 10;
+}
+.deal-table th.sortable { cursor: pointer; }
+.deal-table th.sortable:hover { color: var(--accent-light); }
+.deal-table th.sorted { color: var(--accent-light); }
+.deal-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  vertical-align: top;
+}
+.deal-table tr { transition: background 0.1s; }
+.deal-table tr:hover { background: var(--surface); }
+.deal-table .td-company { color: var(--text); font-weight: 600; }
+.deal-table .td-value { color: var(--green); font-weight: 600; white-space: nowrap; }
+.deal-table .td-date { color: var(--text3); white-space: nowrap; }
+
+/* ── FEED FOOTER ── */
+.feed-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 1rem; padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.showing-count { font-size: 0.78rem; color: var(--text3); }
+
 /* ── EMPTY ── */
 .empty { text-align: center; padding: 5rem 1rem; }
 .empty-icon {
@@ -414,9 +475,51 @@ footer b { color: var(--text2); font-weight: 600; }
   <div id="feed" style="display:none">
     <div class="feed-hdr">
       <span class="feed-lbl">Recent Liquidity Events</span>
-      <span class="feed-count" id="feedCnt"></span>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span class="feed-count" id="feedCnt"></span>
+        <div class="view-toggle">
+          <button class="vt-btn active" data-view="cards" onclick="setView('cards')" title="Card view">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
+          <button class="vt-btn" data-view="table" onclick="setView('table')" title="Table view">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
+
+    <div class="feed-filters" id="feedFilters">
+      <input type="text" class="feed-search" id="feedSearch" placeholder="Search deals..." oninput="applyFilters()">
+      <select id="feedTypeFilter" onchange="applyFilters()">
+        <option value="">All types</option>
+      </select>
+      <select id="feedSectorFilter" onchange="applyFilters()">
+        <option value="">All sectors</option>
+      </select>
+    </div>
+
     <div class="cards" id="cards"></div>
+    <table class="deal-table" id="dealTable" style="display:none">
+      <thead>
+        <tr>
+          <th class="sortable" onclick="sortTable('company')">Company</th>
+          <th class="sortable" onclick="sortTable('type')">Type</th>
+          <th class="sortable" onclick="sortTable('sector')">Sector</th>
+          <th>Acquirer</th>
+          <th class="sortable" onclick="sortTable('dealValue')">Value</th>
+          <th class="sortable" onclick="sortTable('date')">Date</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+    <div class="feed-footer" id="feedFooter">
+      <span class="showing-count" id="showingCount"></span>
+      <button class="fetch-btn" id="loadMoreBtn" onclick="loadMore()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        Load More Deals
+      </button>
+    </div>
   </div>
 
   <div class="empty" id="empty">
@@ -433,6 +536,12 @@ footer b { color: var(--text2); font-weight: 600; }
 
 <script>
 let activeType = 'all';
+let allEvents = [];
+let currentView = 'cards';
+let sortCol = null;
+let sortAsc = true;
+let lastResult = null;
+
 const phrases = [
   'Scanning SA deal flow…',
   'Searching M&A databases…',
@@ -450,6 +559,101 @@ document.getElementById('chips').addEventListener('click', e => {
   b.classList.add('on');
   activeType = b.dataset.t;
 });
+
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll('.vt-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  document.getElementById('cards').style.display = view === 'cards' ? 'flex' : 'none';
+  document.getElementById('dealTable').style.display = view === 'table' ? 'table' : 'none';
+  applyFilters();
+}
+
+function buildFilterOptions() {
+  const types = [...new Set(allEvents.map(e => e.type).filter(Boolean))].sort();
+  const sectors = [...new Set(allEvents.map(e => e.sector).filter(Boolean))].sort();
+  const tf = document.getElementById('feedTypeFilter');
+  const sf = document.getElementById('feedSectorFilter');
+  tf.innerHTML = '<option value="">All types</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+  sf.innerHTML = '<option value="">All sectors</option>' + sectors.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+function applyFilters() {
+  const search = document.getElementById('feedSearch').value.toLowerCase();
+  const typeF = document.getElementById('feedTypeFilter').value;
+  const sectorF = document.getElementById('feedSectorFilter').value;
+
+  let filtered = allEvents.filter(ev => {
+    if (typeF && ev.type !== typeF) return false;
+    if (sectorF && ev.sector !== sectorF) return false;
+    if (search) {
+      const hay = `${ev.company} ${ev.description} ${ev.acquirer} ${ev.sector} ${ev.dealValue}`.toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (sortCol) {
+    filtered.sort((a, b) => {
+      const va = (a[sortCol] || '').toLowerCase();
+      const vb = (b[sortCol] || '').toLowerCase();
+      return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+  }
+
+  renderCards(filtered);
+  renderTable(filtered);
+  document.getElementById('showingCount').textContent = `Showing ${filtered.length} of ${allEvents.length} deals`;
+}
+
+function sortTable(col) {
+  if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = true; }
+  document.querySelectorAll('.deal-table th').forEach(th => th.classList.remove('sorted'));
+  event.target.closest('th').classList.add('sorted');
+  applyFilters();
+}
+
+function renderCards(evs) {
+  const cont = document.getElementById('cards');
+  cont.innerHTML = '';
+  evs.forEach((ev, i) => {
+    const type = (ev.type || 'acquisition').toLowerCase().replace(/[^a-z]/g, '');
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.style.animationDelay = (i * 0.03) + 's';
+    el.innerHTML = `
+      <div class="card-bar bar-${type}"></div>
+      <div>
+        <div class="card-top">
+          <span class="co-name">${x(ev.company)}</span>
+          <span class="ev-tag tag-${type}">${x(ev.type)}</span>
+        </div>
+        <div class="ev-desc">${x(ev.description)}</div>
+        <div class="ev-meta">
+          ${ev.dealValue ? `<div class="meta-item"><div class="meta-lbl">Deal Value</div><div class="meta-val money">${x(ev.dealValue)}</div></div>` : ''}
+          ${ev.acquirer && ev.acquirer !== 'N/A' ? `<div class="meta-item"><div class="meta-lbl">Acquirer</div><div class="meta-val">${x(ev.acquirer)}</div></div>` : ''}
+          ${ev.sector ? `<div class="meta-item"><div class="meta-lbl">Sector</div><div class="meta-val">${x(ev.sector)}</div></div>` : ''}
+        </div>
+      </div>
+      <div class="ev-date">${x(ev.date || '')}</div>
+    `;
+    cont.appendChild(el);
+  });
+}
+
+function renderTable(evs) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = evs.map(ev => {
+    const type = (ev.type || 'acquisition').toLowerCase().replace(/[^a-z]/g, '');
+    return `<tr>
+      <td class="td-company">${x(ev.company)}</td>
+      <td><span class="ev-tag tag-${type}">${x(ev.type)}</span></td>
+      <td>${x(ev.sector || '')}</td>
+      <td>${x(ev.acquirer && ev.acquirer !== 'N/A' ? ev.acquirer : '–')}</td>
+      <td class="td-value">${x(ev.dealValue || '–')}</td>
+      <td class="td-date">${x(ev.date || '')}</td>
+    </tr>`;
+  }).join('');
+}
 
 async function go() {
   const btn = document.getElementById('fetchBtn');
@@ -523,7 +727,8 @@ COMPETITION COMMISSION SA MERGER DECISIONS (Jan-Apr 2026, from official PDF stat
   }
 }
 
-function render(d) {
+function render(d, append = false) {
+  lastResult = d;
   document.getElementById('sTotal').textContent   = d.stats?.totalDeals ?? d.events?.length ?? '–';
   document.getElementById('sValue').textContent   = d.stats?.estimatedTotalValue ?? '–';
   document.getElementById('sLargest').textContent = d.stats?.largestDeal ?? '–';
@@ -534,35 +739,83 @@ function render(d) {
     show('summaryBox');
   }
 
-  const cont = document.getElementById('cards');
-  cont.innerHTML = '';
   const evs = d.events || [];
-  document.getElementById('feedCnt').textContent = evs.length + ' events';
+  if (append) {
+    // Deduplicate by company name
+    const existing = new Set(allEvents.map(e => e.company?.toLowerCase()));
+    evs.forEach(ev => {
+      if (!existing.has(ev.company?.toLowerCase())) allEvents.push(ev);
+    });
+  } else {
+    allEvents = [...evs];
+  }
 
-  evs.forEach((ev, i) => {
-    const type = (ev.type || 'acquisition').toLowerCase().replace(/[^a-z]/g, '');
-    const el = document.createElement('div');
-    el.className = 'card';
-    el.style.animationDelay = (i * 0.05) + 's';
-    el.innerHTML = `
-      <div class="card-bar bar-${type}"></div>
-      <div>
-        <div class="card-top">
-          <span class="co-name">${x(ev.company)}</span>
-          <span class="ev-tag tag-${type}">${x(ev.type)}</span>
-        </div>
-        <div class="ev-desc">${x(ev.description)}</div>
-        <div class="ev-meta">
-          ${ev.dealValue ? `<div class="meta-item"><div class="meta-lbl">Deal Value</div><div class="meta-val money">${x(ev.dealValue)}</div></div>` : ''}
-          ${ev.acquirer && ev.acquirer !== 'N/A' ? `<div class="meta-item"><div class="meta-lbl">Acquirer</div><div class="meta-val">${x(ev.acquirer)}</div></div>` : ''}
-          ${ev.sector ? `<div class="meta-item"><div class="meta-lbl">Sector</div><div class="meta-val">${x(ev.sector)}</div></div>` : ''}
-        </div>
-      </div>
-      <div class="ev-date">${x(ev.date || '')}</div>
-    `;
-    cont.appendChild(el);
-  });
+  document.getElementById('feedCnt').textContent = allEvents.length + ' deals';
+  buildFilterOptions();
+  applyFilters();
+
+  // Show load more if stats say there are more deals
+  const totalReported = d.stats?.totalDeals || 0;
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  loadMoreBtn.style.display = (totalReported > allEvents.length) ? 'inline-flex' : 'none';
+
   show('feed');
+}
+
+async function loadMore() {
+  const btn = document.getElementById('loadMoreBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> Loading…';
+
+  const today = new Date().toISOString().split('T')[0];
+  const existing = allEvents.map(e => e.company).join(', ');
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 4000,
+        system: `SA M&A analyst. Return ONLY raw JSON with more South African deals. Same format:
+{"events":[{"company":"","type":"acquisition|merger|ipo|pe|buyout|bee|delisting|disposal|restructuring","description":"1-2 sentences","dealValue":"","sector":"","acquirer":"","date":""}]}
+EXCLUDE these already-listed companies: ${existing}
+Find DIFFERENT deals from Competition Commission SA, JSE SENS, BusinessTech, Moneyweb, BizNews, Fin24, BusinessLIVE, News24. Today: ${today}.`,
+        messages: [{ role: 'user', content: `Find 10-15 MORE South African deals NOT already listed. Search for additional Competition Commission merger approvals, JSE transactions, PE deals, BEE transactions. Exclude: ${existing}. Return raw JSON only.` }],
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }]
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || data.error || `HTTP ${res.status}`);
+
+    const tb = data.content.filter(b => b.type === 'text').pop();
+    if (!tb?.text) throw new Error('No additional deals found.');
+
+    let raw = tb.text.trim().replace(/```json\n?|\n?```/g, '').trim();
+    const s = raw.indexOf('{'), e2 = raw.lastIndexOf('}');
+    if (s < 0 || e2 < 0) throw new Error('Could not parse response.');
+    const result = JSON.parse(raw.slice(s, e2 + 1));
+
+    // Merge into existing
+    const newEvs = result.events || [];
+    const existingSet = new Set(allEvents.map(e => e.company?.toLowerCase()));
+    newEvs.forEach(ev => {
+      if (!existingSet.has(ev.company?.toLowerCase())) allEvents.push(ev);
+    });
+
+    document.getElementById('feedCnt').textContent = allEvents.length + ' deals';
+    buildFilterOptions();
+    applyFilters();
+    document.getElementById('ts').textContent = new Date().toLocaleTimeString();
+
+  } catch(err) {
+    showErr('Load more: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 5v14M5 12l7 7 7-7"/></svg> Load More Deals';
+    btn.style.display = 'inline-flex'; // Always show after first load-more
+  }
 }
 
 function showErr(msg) { const e = document.getElementById('errBox'); e.textContent = msg; show('errBox'); }
