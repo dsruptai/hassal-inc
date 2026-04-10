@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hassal Inc — SA M&amp;A Monitor</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div>
+            <h1>Hassal <span>Inc</span></h1>
+            <div class="subtitle">South African M&amp;A &amp; Liquidity Event Intelligence</div>
+        </div>
+        <div class="header-right">
+            <div class="last-updated">Last updated: {{ last_updated }}</div>
+            <button class="btn btn-primary" onclick="triggerScrape()" id="scrapeBtn">
+                Refresh Data
+            </button>
+        </div>
+    </header>
+
+    <nav>
+        <a href="/" class="active">Dashboard</a>
+        <a href="/about">About &amp; Sources</a>
+    </nav>
+
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="number">{{ total }}</div>
+            <div class="label">Total Deals Tracked</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ sources|length }}</div>
+            <div class="label">Active Sources</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ deal_types|length }}</div>
+            <div class="label">Deal Categories</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ deals|length }}</div>
+            <div class="label">Recent Deals</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="layout">
+            <div class="main-content">
+                <div class="filters">
+                    <input type="text" id="searchInput" placeholder="Search deals, companies, keywords..."
+                           onkeyup="filterDeals()">
+                    <select id="typeFilter" onchange="filterDeals()">
+                        <option value="">All Deal Types</option>
+                        {% for dt in deal_types %}
+                        <option value="{{ dt.deal_type }}">{{ dt.deal_type }} ({{ dt.count }})</option>
+                        {% endfor %}
+                    </select>
+                    <select id="sourceFilter" onchange="filterDeals()">
+                        <option value="">All Sources</option>
+                        {% for s in sources %}
+                        <option value="{{ s.source }}">{{ s.source }} ({{ s.count }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="deals-grid" id="dealsGrid">
+                    {% if deals %}
+                        {% for deal in deals %}
+                        <div class="deal-card"
+                             data-type="{{ deal.deal_type }}"
+                             data-source="{{ deal.source }}"
+                             data-search="{{ deal.title|lower }} {{ deal.summary|lower }} {{ deal.companies|lower }}">
+                            <div class="deal-header">
+                                <div class="deal-title">
+                                    {% if deal.url %}
+                                    <a href="{{ deal.url }}" target="_blank" rel="noopener">{{ deal.title }}</a>
+                                    {% else %}
+                                    {{ deal.title }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="deal-meta">
+                                <span class="badge badge-type">{{ deal.deal_type }}</span>
+                                <span class="badge badge-source">{{ deal.source }}</span>
+                                <span class="badge badge-score">Score: {{ deal.relevance_score }}</span>
+                            </div>
+                            {% if deal.summary %}
+                            <div class="deal-summary">{{ deal.summary[:300] }}{% if deal.summary|length > 300 %}...{% endif %}</div>
+                            {% endif %}
+                            <div class="deal-footer">
+                                <div>
+                                    {% if deal.companies %}
+                                    <span class="companies">{{ deal.companies }}</span> &middot;
+                                    {% endif %}
+                                    {% if deal.published_date %}
+                                    {{ deal.published_date[:10] }}
+                                    {% endif %}
+                                </div>
+                                {% if deal.keywords_matched %}
+                                <div class="keywords">{{ deal.keywords_matched }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <h3>No deals found yet</h3>
+                            <p>Data is being collected from South African M&amp;A sources. Click "Refresh Data" to trigger a scan, or wait for the automatic hourly scan.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="sidebar-card">
+                    <h3>Sources</h3>
+                    {% for s in sources %}
+                    <div class="source-item">
+                        <span>{{ s.source }}</span>
+                        <span class="count">{{ s.count }}</span>
+                    </div>
+                    {% endfor %}
+                    {% if not sources %}
+                    <div style="color: var(--text-muted); font-size: 0.85rem;">No data yet</div>
+                    {% endif %}
+                </div>
+
+                <div class="sidebar-card">
+                    <h3>Deal Types</h3>
+                    {% for dt in deal_types %}
+                    <div class="source-item">
+                        <span>{{ dt.deal_type }}</span>
+                        <span class="count">{{ dt.count }}</span>
+                    </div>
+                    {% endfor %}
+                    {% if not deal_types %}
+                    <div style="color: var(--text-muted); font-size: 0.85rem;">No data yet</div>
+                    {% endif %}
+                </div>
+
+                <div class="sidebar-card">
+                    <h3>Monitored Sources</h3>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.8;">
+                        Moneyweb<br>
+                        BizNews<br>
+                        Fin24 / News24<br>
+                        BusinessLIVE<br>
+                        IOL Business Report<br>
+                        Engineering News<br>
+                        JSE SENS<br>
+                        DealMakers SA<br>
+                        Competition Commission SA
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Hassal Inc &mdash; South African M&amp;A &amp; Liquidity Event Intelligence</p>
+        <p style="margin-top: 0.5rem;">
+            Data sourced from JSE SENS, DealMakers SA, Competition Commission, Moneyweb, BizNews, Fin24, BusinessLIVE, and more.
+        </p>
+    </footer>
+
+    <script>
+        function filterDeals() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const sourceFilter = document.getElementById('sourceFilter').value;
+            const cards = document.querySelectorAll('.deal-card');
+
+            cards.forEach(card => {
+                const matchSearch = !search || card.dataset.search.includes(search);
+                const matchType = !typeFilter || card.dataset.type === typeFilter;
+                const matchSource = !sourceFilter || card.dataset.source === sourceFilter;
+                card.style.display = (matchSearch && matchType && matchSource) ? '' : 'none';
+            });
+        }
+
+        async function triggerScrape() {
+            const btn = document.getElementById('scrapeBtn');
+            const originalText = btn.textContent;
+            btn.innerHTML = 'Scanning...<span class="spinner"></span>';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/scrape', { method: 'POST' });
+                const data = await resp.json();
+                alert(data.message);
+                window.location.reload();
+            } catch (err) {
+                alert('Scrape failed: ' + err.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

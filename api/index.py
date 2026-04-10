@@ -11,8 +11,9 @@ from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
-# Add parent dir to path so we can import our modules
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# All modules are co-located in api/ for Vercel bundling
+API_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, API_DIR)
 
 from database import init_db, insert_deal, get_deals, get_deal_count, get_sources_summary, get_deal_types_summary
 from scrapers import run_all_scrapers
@@ -22,8 +23,7 @@ logger = logging.getLogger("hassal_inc")
 
 app = FastAPI(title="Hassal Inc", description="South African M&A & Liquidity Event Monitor")
 
-# Templates are relative to project root
-TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates")
+TEMPLATE_DIR = os.path.join(API_DIR, "templates")
 templates = Jinja2Templates(directory=TEMPLATE_DIR)
 
 # Initialize DB on cold start
