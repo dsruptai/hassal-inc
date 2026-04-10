@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 
 from fastapi import FastAPI, Request, Query
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 
 # All modules are co-located in api/ for Vercel bundling
@@ -26,8 +26,19 @@ app = FastAPI(title="Hassal Inc", description="South African M&A & Liquidity Eve
 TEMPLATE_DIR = os.path.join(API_DIR, "templates")
 templates = Jinja2Templates(directory=TEMPLATE_DIR)
 
+STATIC_DIR = os.path.join(API_DIR, "static")
+
 # Initialize DB on cold start
 init_db()
+
+
+@app.get("/static/{file_path:path}")
+async def serve_static(file_path: str):
+    full_path = os.path.join(STATIC_DIR, file_path)
+    if os.path.isfile(full_path):
+        media_type = "text/css" if file_path.endswith(".css") else None
+        return FileResponse(full_path, media_type=media_type)
+    return JSONResponse({"error": "not found"}, status_code=404)
 
 
 def _run_scrape():
