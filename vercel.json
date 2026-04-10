@@ -4,7 +4,8 @@
       "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
-        "includeFiles": "api/**"
+        "includeFiles": "api/**",
+        "maxDuration": 60
       }
     }
   ],

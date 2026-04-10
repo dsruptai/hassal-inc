@@ -42,10 +42,6 @@ def _run_scrape():
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    # Auto-scrape if DB is empty
-    if get_deal_count() == 0:
-        _run_scrape()
-
     deals = get_deals(limit=50)
     total = get_deal_count()
     sources = get_sources_summary()
