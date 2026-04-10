@@ -467,9 +467,28 @@ async function go() {
 
   const today = new Date().toISOString().split('T')[0];
 
-  const system = `SA M&A analyst. Use web search to find recent South African deals. Return ONLY raw JSON:
+  const system = `SA M&A analyst. Use web search AND the Competition Commission data below to find recent South African deals. Return ONLY raw JSON:
 {"summary":"1-2 sentences on SA deal trends","stats":{"totalDeals":0,"estimatedTotalValue":"R0","largestDeal":"","hotSector":""},"events":[{"company":"","type":"acquisition|merger|ipo|pe|buyout|bee|delisting|disposal|restructuring","description":"1-2 sentences","dealValue":"R0 or Undisclosed","sector":"","acquirer":"or N/A","date":"Mon YYYY"}]}
-Return 6-10 events. Only SA companies/assets. Today: ${today}.`;
+Return 8-12 events. Only SA companies/assets. Today: ${today}.
+
+CONFIRMED COMPETITION COMMISSION DECISIONS (use these + web search for more):
+
+10 Apr 2026:
+- Fairfield Dairy acquiring Ladismith Cheese Company — APPROVED WITH CONDITIONS — Dairy sector — BEE/supplier development commitments
+- Tsebo Solutions acquiring UCT Food Services — APPROVED WITH CONDITIONS — Catering/facilities — Employment moratorium
+- Saxony SA Property acquiring Durban Workshop from Vukile — APPROVED — Real Estate — Retail property in KZN
+- GHN Resources acquiring Goedehoop North Colliery from Thungela — APPROVED — Mining/Coal — Non-operational mine in Mpumalanga
+
+02 Apr 2026:
+- Cape Forests acquiring MTO Forestry & PG Bison Southern Cape — APPROVED WITH CONDITIONS — Forestry/Timber — Sawlog supply commitments, BEE conditions
+- AttBid acquiring RMB Holdings (38.5% interest in Atterbury Property) — APPROVED — Real Estate — Property development portfolio
+- WBHO Construction acquiring Zamori 172 (DPRO Project Management) — APPROVED — Construction/Renewable Energy — Solar energy projects
+- DHL Supply Chain acquiring Vital Distribution Solutions, Staffing Logistics, Vital Fleet — APPROVED — Transport & Logistics
+
+26 Mar 2026:
+- Midlands Mall (JBSA Props) acquiring Liberty Midlands Mall from Liberty Group — APPROVED WITH CONDITIONS — Real Estate — 77,293m² shopping centre in Pietermaritzburg
+- Super Group Dealerships acquiring Stucky Motors Chery Omoda Jaecoo dealership in Mbombela — APPROVED — Automotive/Retail
+- DHL Supply Chain acquiring Vital Distribution, Staffing Logistics, Vital Fleet — APPROVED — Logistics/Supply Chain`;
 
   try {
     const res = await fetch('/api/chat', {
